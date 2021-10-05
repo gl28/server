@@ -2,7 +2,8 @@ import os
 import socket
 import signal
 import errno
-import mimetypes
+from http_request import HTTPRequest
+from http_response import HTTPResponse
 
 HOST = ''
 PORT = 8000
@@ -11,112 +12,16 @@ class Server:
     def __init__(self, host, port):
         self.host = host
         self.port = port
-        self.supported_methods = ['GET', 'PUT']
-        self.headers = {
-            'Content-Type': 'text/html',
-        }
-        self.status_codes = {
-            200: 'OK',
-            404: 'Not Found',
-            501: 'Not Implemented',
-        }
-    
-    def parse_request(self, request):
-
-        # '\r\n\r\n' separates request and headers from message body 
-        chunks = request.decode().split('\r\n\r\n')
-
-        request_and_headers = chunks[0]
-        
-        body = ''
-        if len(chunks) > 1:
-            body = chunks[1]
-
-        request_parts = request_and_headers.split('\r\n')
-        
-        request_line = request_parts[0].split(' ')
-        method = request_line[0]
-        uri = '/'
-
-        if len(request_line) > 1:
-            # request may not include URI if client requests home page
-            # in which case request_line[1] would be the HTTP version
-            uri = request_line[1]
-
-        if uri[-1] == '/':
-            # if URI ends in slash assume it's looking for index.html
-            uri += 'index.html'
-            
-        headers = {}
-
-        for i in range(1, len(request_parts)):
-            # everything after index 0 will be a header
-            header_parts = request_parts[i].split(':')
-            header_key = header_parts[0]
-            header_value = header_parts[1].lstrip()
-            headers[header_key] = header_value
-
-
-        return {'method': method, 'uri': uri, 'headers': headers, 'body': body}
-
-    def handle_GET(self, uri):
-        file_name = 'site/' + uri.lstrip('/')
-
-        if os.path.exists(file_name):
-            with open(file_name, 'rb') as file:
-                file_contents = file.read()
-
-            content_type, encoding = mimetypes.guess_type(file_name)
-
-            if not content_type:
-                content_type = 'text/html'
-
-            response = b'HTTP/1.1 200 OK \r\n'
-            response += b'Content-Type: '
-            response += content_type.encode()
-            response += b'\r\n\r\n'
-            response += file_contents
-        else:
-            response = b'HTTP/1.1 404 Not Found \r\n'
-            response += b'Content-Type: text/html'
-            response += b'\r\n\r\n'
-            response += b'<h1>404 Not Found</h1>'
-            response += b'<p>The page you requested could not be found.'
-
-        return response
-
-
-    def handle_501(self, method):
-        response = f'HTTP/1.1 501 {self.status_codes[501]} \r\n'
-        response += 'Content-Type: ' + self.headers['Content-Type']
-        response += '\r\n\r\n'
-        response += '<h1>501 Not Implemented</h1>'
-        response += f'<p>The method {method} has not been implemented yet.</p>'
-
-        return response.encode()
-
 
     def handle_request(self, connection):
-        request = connection.recv(1024)
+        request_data = connection.recv(4096)
+        print(request_data.decode())
         
-        parsed = self.parse_request(request)
-        method = parsed['method']
-        uri = parsed['uri']
-        headers = parsed['headers']
-        body = parsed['body']
+        request = HTTPRequest(request_data)
+        response = HTTPResponse(request.method, request.uri, request.body)
 
-        print(f'Method: {method}. URI: {uri}.')
-        print(headers)
-        print(body)
-        
-        response = ''
+        connection.sendall(response.data)
 
-        if method == 'GET':
-            response = self.handle_GET(uri)
-        else:
-            response = self.handle_501(method)
-
-        connection.sendall(response)
 
     def sigchld_handler(self, signal_num, stack_frame):
         while True:
@@ -149,7 +54,6 @@ class Server:
         signal.signal(signal.SIGCHLD, self.sigchld_handler)
 
         print(f'Access on port {self.port}')
-        # print(f'PPID: {os.getppid()}')
         
         while True:
             client_socket, client_address = server_socket.accept()

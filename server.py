@@ -5,7 +5,7 @@ import errno
 from http_request import HTTPRequest
 from http_response import HTTPResponse
 
-HOST = ''
+HOST = 'localhost'
 PORT = 8000
 
 class Server:
@@ -53,13 +53,14 @@ class Server:
         # calls sigchld_handler when the child process ends to avoid zombie processes
         signal.signal(signal.SIGCHLD, self.sigchld_handler)
 
-        print(f'Access on port {self.port}')
+        print(f'Serving HTTP on {self.host} at port {self.port}')
         
         while True:
             client_socket, client_address = server_socket.accept()
 
             pid = os.fork()
-            if pid == 0: # child process
+            if pid == 0:
+                # child process
                 # server socket is being handled by parent process
                 server_socket.close()
                 self.handle_request(client_socket)
@@ -68,7 +69,8 @@ class Server:
                 # exit child process
                 os._exit(0)
 
-            else: #parent process
+            else:
+                #parent process
                 # need to close duplicate connections
                 client_socket.close()
 

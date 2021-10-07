@@ -33,11 +33,8 @@ class HTTPRequest:
         """
 
         chunks = request.decode().split('\r\n\r\n')
-
         request_and_headers = chunks[0]
-
         request_parts = request_and_headers.split('\r\n')
-        
         request_line = request_parts[0].split(' ')
         method = request_line[0]
         uri = '/'

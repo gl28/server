@@ -1,10 +1,13 @@
 <html>
     <head>
-        <title>Index</title>
+        <title>Home Page</title>
     </head>
     <body>
-        <h1>Index</h1>
-        <p>Welcome to my simple website.</p>
-        <p><a href="/next.html">Next page</a></p>
+        <h1>Home Page</h1>
+        <p>This server is capable of handling GET and POST requests. For other request types it will return <code>501 Not Implemented</code>.</p>
+        <p><a href="/next.html">Test POST requests</a></p>
+        <p>The server can serve both text/HTML files and images.</p>
+        <p><img src="server.jpg" width="300"></p>
+        <p>If you attempt to access a <a href="/bad_url.html">page that doesn't exist</a>, the server will return <code>404 Not Found</code>.</p>
     </body>
 </html>

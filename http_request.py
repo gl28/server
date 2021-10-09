@@ -3,7 +3,7 @@ import re
 class HTTPRequest:
     def __init__(self, request):
         self.parse_request(request)
-    
+
     def decode(self, encoded):
         # replaces any percent-encoded characters with ASCII
         

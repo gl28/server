@@ -1,0 +1,9 @@
+# Redirect format:
+# 301 path/to/old/file path/to/new/file
+# Forbidden format:
+# 403 path/to/forbidden/file
+# 
+# Put a hash character at the beginning of a line to indicate a comment
+#
+403 forbidden.html
+301 old_file.html new_file.html
